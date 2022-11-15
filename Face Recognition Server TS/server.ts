@@ -5,6 +5,8 @@ import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import DatabaseConstructor, {Database} from "better-sqlite3";
 import { nextTick } from 'process';
+import { json } from 'stream/consumers';
+import { count } from 'console';
 const db = new DatabaseConstructor('db.db');
 
 const app: Express = express();
@@ -14,6 +16,28 @@ app.use(cookieParser());
 
 const jwtKey = 'yrQwR(Tv&dS6xWG9z2ray5G(xekN)UbbuNr%hnu%';
 const jwtExpirySeconds = 300;
+
+const auth =  (req: Request, res: Response,next:NextFunction) => {
+  let { token}: { token:any } = req.cookies;
+
+  if (!token) {
+		return res.status(401).end()
+	}
+
+  let payload:any;
+	try {
+		payload = jwt.verify(token, jwtKey)
+	} catch (e) {
+		if (e instanceof jwt.JsonWebTokenError) {
+			return res.status(401).end()
+		}
+		return res.status(400).end()
+	}
+
+  console.log("Authenticated");
+  next();
+
+}
 
 app.post('/register', (req: Request, res: Response) => {
   let { username, password }: { username: string; password: string } = req.body;
@@ -54,31 +78,47 @@ app.post('/login', (req: Request, res: Response) => {
 
 
   res.cookie("token", token, { maxAge: jwtExpirySeconds * 1000 });
-	res.send("Logged in");
+	res.status(200).send("Logged in");
 
 
 });
 
-const auth =  (req: Request, res: Response,next:NextFunction) => {
-  let { token}: { token:any } = req.cookies;
+app.put('/increment',auth, (req: Request, res: Response) => {
+  let {token}: { token:any } = req.cookies;
 
-  if (!token) {
-		return res.status(401).end()
-	}
+  const decodedToken = jwt.decode(token) as { username: string }; // <--- Cast here for Typescript
+  const { username } = decodedToken;
 
-  let payload:any;
-	try {
-		payload = jwt.verify(token, jwtKey)
-	} catch (e) {
-		if (e instanceof jwt.JsonWebTokenError) {
-			return res.status(401).end()
-		}
-		return res.status(400).end()
-	}
+  const query = db.prepare('UPDATE Users SET Count = Count+1 where Username = ?;');
+  query.run(username);
+  
+  res.status(200).end();
+  
+});
 
-  next();
+app.get('/count', (req: Request, res: Response) => {
 
-}
+  let {token}: { token:any } = req.cookies;
+
+  const decodedToken = jwt.decode(token) as { username: string }; // <--- Cast here for Typescript
+  if(decodedToken === null){
+    return res.status(404).end();
+  }
+
+  const { username } = decodedToken;
+
+  const query = db.prepare('SELECT Count from Users where Username = ?;');
+  let {Count} = query.get(username);
+  if(Count === null){
+    return res.status(404).end();
+  }
+
+  Count = JSON.stringify({count:Count});
+
+  res.status(200).send(Count);
+
+});
+
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
