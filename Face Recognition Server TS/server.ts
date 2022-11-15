@@ -1,9 +1,10 @@
-import express, { Express, Request, response, Response } from 'express';
+import express, { Express, Request, response, Response,NextFunction } from 'express';
 import bcrypt, { hash } from 'bcrypt';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import DatabaseConstructor, {Database} from "better-sqlite3";
+import { nextTick } from 'process';
 const db = new DatabaseConstructor('db.db');
 
 const app: Express = express();
@@ -58,14 +59,12 @@ app.post('/login', (req: Request, res: Response) => {
 
 });
 
-app.post('/auth', (req: Request, res: Response) => {
-	let { token}: { token:any } = req.cookies;
+const auth =  (req: Request, res: Response,next:NextFunction) => {
+  let { token}: { token:any } = req.cookies;
 
   if (!token) {
 		return res.status(401).end()
 	}
-
-	console.log(token);
 
   let payload:any;
 	try {
@@ -77,8 +76,9 @@ app.post('/auth', (req: Request, res: Response) => {
 		return res.status(400).end()
 	}
 
-  res.send(`Welcome ${payload.username}!`)
-});
+  next();
+
+}
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
