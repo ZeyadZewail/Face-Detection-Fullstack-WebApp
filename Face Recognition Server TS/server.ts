@@ -4,14 +4,12 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import DatabaseConstructor, {Database} from "better-sqlite3";
-import { nextTick } from 'process';
-import { json } from 'stream/consumers';
-import { count } from 'console';
 const db = new DatabaseConstructor('db.db');
 
 const app: Express = express();
 const port = 8000;
 app.use(express.json());
+app.use(cors({credentials:true,origin:true}));
 app.use(cookieParser());
 
 const jwtKey = 'yrQwR(Tv&dS6xWG9z2ray5G(xekN)UbbuNr%hnu%';
@@ -41,6 +39,10 @@ const auth =  (req: Request, res: Response,next:NextFunction) => {
 
 app.post('/register', (req: Request, res: Response) => {
   let { username, password }: { username: string; password: string } = req.body;
+  if(!username || !password){
+    return res.status(404).end();
+  }
+
   username = username.toLowerCase();
   
   const query = db.prepare('SELECT Username from Users where Username = ?;');
@@ -54,20 +56,30 @@ app.post('/register', (req: Request, res: Response) => {
   let hashedPassword = bcrypt.hashSync(password, 10);
   db.prepare(`INSERT INTO Users(username,pHash,count) VALUES (?,?,0)`).run(username,hashedPassword);
 
+  console.log("Registered " + username );
   res.status(200).send("Registered " + username );
 });
 
 app.post('/login', (req: Request, res: Response) => {
   let { username, password }: { username: string; password: string } = req.body;
+  if(!username || !password){
+    return res.status(404).end();
+  }
+
   username = username.toLowerCase();
 
   const query = db.prepare('SELECT pHash from Users where Username = ?;');
   let result = query.get(username);
 
+  if(result === undefined){
+    console.log("Wrong username/password");
+    return res.status(404).send("Wrong username/password");
+  }
+
   let passwordCorrect = bcrypt.compareSync(password,result.pHash);
 
   if(!passwordCorrect){
-    return res.send("wrong password");
+    return res.status(404);
   }
 
 
@@ -77,8 +89,8 @@ app.post('/login', (req: Request, res: Response) => {
 	});
 
 
-  res.cookie("token", token, { maxAge: jwtExpirySeconds * 1000 });
-	res.status(200).send("Logged in");
+  res.cookie("token", token, { maxAge: jwtExpirySeconds * 1000});
+	res.status(200).send("logged in");
 
 
 });

@@ -10,6 +10,7 @@ import { loadFull } from "tsparticles";
 import FaceRecognition from './Components/FaceRecognition/FaceRecognition';
 import SignIn from './Components/SignIn/SignIn';
 import Register from './Components/Register/Register';
+import Cookies from 'js-cookie';
 
 const USER_ID = 'zeyadz';
 // Your PAT (Personal Access Token) can be found in the portal under Authentification
@@ -27,6 +28,18 @@ function App() {
   const [img,setImg] = React.useState("");
   const [boxes,setBoxes] = React.useState<Object[]>([]);
   const [route,setRoute] = React.useState<String>('SignIn');
+  const [token,setToken] = React.useState<String>('');
+  const [count,setCount] = React.useState(-1);
+
+  React.useEffect(()=>{
+    let cookie = Cookies.get('token') as string
+    setToken(cookie);
+    console.log("token",Cookies.get('token'))
+    if(cookie !== undefined){
+      getCount();
+      setRoute("Home");
+    }
+  },[token])
 
   const particlesInit = useCallback(async (engine: Engine) => {
     console.log(engine);
@@ -43,9 +56,6 @@ function App() {
 
   let calculateBoxes = (data:Array<any>) => {
     let boxes = []
-    let Image = document.getElementById("inputImage");
-    let width = Number(Image?.clientWidth);
-    let height = Number(Image?.clientHeight);
     for(let element of data){
       let box = {
         leftCol: element.region_info.bounding_box.left_col*100 + '%',
@@ -60,6 +70,22 @@ function App() {
     setBoxes(boxes);
   }
 
+  const getCount = ()=>{
+    
+    const requestOptions = {
+        method: 'GET',
+        mode: 'cors' as RequestMode,
+        headers: { 
+          'Accept': 'application/json',
+          'Content-Type': 'application/json' 
+        },
+        credentials:'include' as RequestCredentials
+      };
+
+    fetch("http://localhost:8000/count",requestOptions).then((response)=> response.json()).then((jsonCount) => setCount(jsonCount.count));
+
+  }
+
 
   let OnInputChange = (event:any) =>{
     setInput(event.target.value)
@@ -67,7 +93,6 @@ function App() {
 
   let onSubmit = () => {
     setImg(String(input));
-    console.log("pressed");
 
     let raw = JSON.stringify({
       "user_app_id": {
@@ -96,27 +121,80 @@ function App() {
 
     fetch(`https://api.clarifai.com/v2/models/${MODEL_ID}/outputs`, requestOptions)
         .then(response => response.json())
-        .then(result => calculateBoxes(result.outputs[0].data.regions))
+        .then(result => calculateBoxes(result.outputs[0].data.regions)).then(()=>{increment()}).then(() => {getCount()})
         .catch(error => console.log('error', error));
+
+    
   }
 
-  let signInCheck = () => {
-    setRoute("Home");
+  let signIn = async (username:string,password:string) => {
+    const requestOptions = {
+      method: 'POST',
+      mode: 'cors' as RequestMode,
+      headers: { 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json' 
+      },
+      credentials:'include' as RequestCredentials,
+      body: JSON.stringify({username:username,password:password})
+    };
+
+    let response  = await fetch("http://localhost:8000/login",requestOptions)
+    response.text().then(console.log);
+    let cookie = Cookies.get('token') as string
+    setToken(cookie);
   }
 
+  let register = async (username:string,password:string) => {
+    const requestOptions = {
+      method: 'POST',
+      mode: 'cors' as RequestMode,
+      headers: { 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json' 
+      },
+      credentials:'include' as RequestCredentials,
+      body: JSON.stringify({username:username,password:password})
+    };
+
+    let response = await fetch("http://localhost:8000/register",requestOptions)
+    response.text().then(console.log);
+  }
+
+  let signOut = ()=>{
+    Cookies.remove('token');
+    setImg('');
+    setBoxes([]);
+    setToken('');
+    setRoute('SignIn');
+  }
+
+  let increment = () =>{
+    const requestOptions = {
+      method: 'PUT',
+      mode: 'cors' as RequestMode,
+      headers: { 
+        'Accept': 'application/json',
+        'Content-Type': 'application/json' 
+      },
+      credentials:'include' as RequestCredentials
+    };
+
+    fetch("http://localhost:8000/increment",requestOptions).then((response)=> response.text()).then(console.log);
+  }
   
   let conditonalRender = () =>{
     switch(route){
       case 'SignIn':
-        return(<SignIn OnSignIn={signInCheck} OnRegister={() => {setRoute("Register")}}/>)
+        return(<SignIn OnSignIn={signIn} OnRegister={() => {setRoute("Register")}}/>)
 
       case 'Register':
-        return(<Register OnBack={() => {setRoute("SignIn")}} OnRegister/>)
+        return(<Register OnBack={() => {setRoute("SignIn")}} OnRegister={register}/>)
       case "Home":
         return(
         <div className='flex-col  flex'>
-          <Navigation OnSignOut = {() => {setRoute("SignIn")}}/>
-          <Rank/>
+          <Navigation OnSignOut = {signOut}/>
+          <Rank count={count}/>
           <ImageLinkForm OnInputChange = {OnInputChange} OnSubmit = {onSubmit}/>
           <FaceRecognition img={img} boxes={boxes}/>
         </div>
