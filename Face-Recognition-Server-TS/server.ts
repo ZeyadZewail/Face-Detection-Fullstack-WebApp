@@ -20,9 +20,7 @@ const jwtExpirySeconds = 300;
 
 //static file serving
 app.get("/", (req, res) => {
-  let path_ = path.join(__dirname,"..","../Face-Recognition-reactTS","build", "index.html")
-  console.log(path_);
-  res.sendFile(path_);
+    res.sendFile(path.join(__dirname,"..","../Face-Recognition-reactTS","build", "index.html"));
 });
 
 
