@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import DatabaseConstructor, {Database} from "better-sqlite3";
+import path from 'path';
 const db = new DatabaseConstructor('db.db');
 
 const app: Express = express();
@@ -11,9 +12,19 @@ const port = 8000;
 app.use(express.json());
 app.use(cors({credentials:true,origin:true}));
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname,"..","../Face-Recognition-reactTS","build")));
+app.use(express.static("public"));
 
 const jwtKey = 'yrQwR(Tv&dS6xWG9z2ray5G(xekN)UbbuNr%hnu%';
 const jwtExpirySeconds = 300;
+
+//static file serving
+app.get("/", (req, res) => {
+  let path_ = path.join(__dirname,"..","../Face-Recognition-reactTS","build", "index.html")
+  console.log(path_);
+  res.sendFile(path_);
+});
+
 
 const auth =  (req: Request, res: Response,next:NextFunction) => {
   let { token}: { token:any } = req.cookies;
