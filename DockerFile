@@ -1,0 +1,13 @@
+FROM node
+RUN apt-get update
+RUN apt-get install git
+
+WORKDIR /
+RUN git clone https://github.com/ZeyadZewail/Face-Detection-Fullstack-WebApp
+WORKDIR /Face-Detection-Fullstack-WebApp/Face Recognition Server TS
+RUN npm install
+RUN npm run build
+
+WORKDIR /Face-Detection-Fullstack-WebApp/Face Recognition reactTS
+RUN npm install
+CMD [ "npm start & (cd "Face-Detection-Fullstack-WebApp/Face Recognition Server TS" && npm start)" ]
