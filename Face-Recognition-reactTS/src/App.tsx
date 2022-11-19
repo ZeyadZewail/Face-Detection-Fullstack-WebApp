@@ -169,6 +169,7 @@ function App() {
     if(response.status === 400){setError("Username already exists"); return;}
     if(response.status === 404){setError("Enter Username and password"); return;}
     response.text().then(console.log);
+    signIn(username,password);
   }
 
   let signOut = ()=>{
