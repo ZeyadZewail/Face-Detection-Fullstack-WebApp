@@ -1,8 +1,8 @@
-FROM node:lts as base
+FROM node:lts
 RUN apt-get -y update
 RUN apt-get -y install git
 #RUN apt -y install nodejs
-EXPOSE 8000
+EXPOSE 8080
 
 WORKDIR /root
 RUN git clone https://github.com/ZeyadZewail/Face-Detection-Fullstack-WebApp
