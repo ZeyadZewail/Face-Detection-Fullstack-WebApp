@@ -7,4 +7,4 @@ a full stack application that helps you detect human faces in images using clari
 Front end using React (typescript) , backend using nodeJS (typescript) and the database is stored using SQLite
 
 
-![preview](https://drive.google.com/uc?id=10fo0wIhLJ4REoyBLUrs2eu5X252u3OHg)
+![preview](https://i.imgur.com/sCPx0Ll.mp4)
