@@ -11,7 +11,6 @@ import FaceRecognition from './Components/FaceRecognition/FaceRecognition';
 import SignIn from './Components/SignIn/SignIn';
 import Register from './Components/Register/Register';
 import Cookies from 'js-cookie';
-import { notStrictEqual } from 'assert';
 
 const USER_ID = 'zeyadz';
 // Your PAT (Personal Access Token) can be found in the portal under Authentification
