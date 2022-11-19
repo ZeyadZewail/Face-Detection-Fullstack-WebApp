@@ -11,4 +11,6 @@ jobs:
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+      - run: curl -L https://fly.io/install.sh | sh
+      - run: /root/.fly/bin/flyctl auth login
+      - run: /root/.fly/bin/flyctl deploy /content/Face-Detection-Fullstack-WebApp
