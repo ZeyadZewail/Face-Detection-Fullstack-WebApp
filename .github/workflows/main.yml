@@ -12,5 +12,5 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: curl -L https://fly.io/install.sh | sh
-      - name: Run deploy script
-        run: chmod+x /root/.fly/bin/flyctl deploy -t ${{ secrets.FLY_KEY }}
+      - uses: superfly/flyctl-actions/setup-flyctl@master 
+      - run: flyctl deploy -t ${{ secrets.FLY_KEY }}
