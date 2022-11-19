@@ -11,6 +11,7 @@ import FaceRecognition from './Components/FaceRecognition/FaceRecognition';
 import SignIn from './Components/SignIn/SignIn';
 import Register from './Components/Register/Register';
 import Cookies from 'js-cookie';
+import { notStrictEqual } from 'assert';
 
 const USER_ID = 'zeyadz';
 // Your PAT (Personal Access Token) can be found in the portal under Authentification
@@ -19,7 +20,10 @@ const APP_ID = 'my-first-application';
 // Change these to whatever model and image URL you want to use
 const MODEL_ID = 'people-detection-yolov5';
 
-
+let api = process.env.REACT_APP_API_URL?.trim();
+if(api === undefined){
+  api = '';
+}
 
 
 function App() {
@@ -30,12 +34,15 @@ function App() {
   const [route,setRoute] = React.useState<String>('SignIn');
   const [token,setToken] = React.useState<String>('');
   const [count,setCount] = React.useState(-1);
+  const [error,setError] = React.useState("");
+  
 
   React.useEffect(()=>{
     let cookie = Cookies.get('token') as string
     setToken(cookie);
     console.log("token",Cookies.get('token'))
     if(cookie !== undefined){
+      setError("");
       getCount();
       setRoute("Home");
     }
@@ -82,7 +89,7 @@ function App() {
         credentials:'include' as RequestCredentials
       };
 
-    fetch("http://localhost:8000/count",requestOptions).then((response)=> response.json()).then((jsonCount) => setCount(jsonCount.count));
+    fetch(`${api}/count`,requestOptions).then((response)=> response.json()).then((jsonCount) => setCount(jsonCount.count));
 
   }
 
@@ -139,7 +146,8 @@ function App() {
       body: JSON.stringify({username:username,password:password})
     };
 
-    let response  = await fetch("http://localhost:8000/login",requestOptions)
+    let response  = await fetch(`${api}/login`,requestOptions)
+    if(response.status === 404){setError("Wrong Username/Password"); return;}
     response.text().then(console.log);
     let cookie = Cookies.get('token') as string
     setToken(cookie);
@@ -157,7 +165,9 @@ function App() {
       body: JSON.stringify({username:username,password:password})
     };
 
-    let response = await fetch("http://localhost:8000/register",requestOptions)
+    let response = await fetch(`${api}/register`,requestOptions)
+    if(response.status === 400){setError("Username already exists"); return;}
+    if(response.status === 404){setError("Enter Username and password"); return;}
     response.text().then(console.log);
   }
 
@@ -180,16 +190,15 @@ function App() {
       credentials:'include' as RequestCredentials
     };
 
-    fetch("http://localhost:8000/increment",requestOptions).then((response)=> response.text()).then(console.log);
+    fetch(`${api}/increment`,requestOptions).then((response)=> response.text()).then(console.log);
   }
   
   let conditonalRender = () =>{
     switch(route){
       case 'SignIn':
-        return(<SignIn OnSignIn={signIn} OnRegister={() => {setRoute("Register")}}/>)
-
+        return(<SignIn OnSignIn={signIn} OnRegister={() => { setError(""); setRoute("Register"); } } error={error}/>)
       case 'Register':
-        return(<Register OnBack={() => {setRoute("SignIn")}} OnRegister={register}/>)
+        return(<Register OnBack={() => { setError(""); setRoute("SignIn"); } } OnRegister={register} error={error}/>)
       case "Home":
         return(
         <div className='flex-col  flex'>

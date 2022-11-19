@@ -59,7 +59,7 @@ app.post('/register', (req: Request, res: Response) => {
 
 
   if(check.length != 0){
-    return res.send("Name Already Exists");
+    return res.status(400).send("Name Already Exists");
   }
 
   let hashedPassword = bcrypt.hashSync(password, 10);
