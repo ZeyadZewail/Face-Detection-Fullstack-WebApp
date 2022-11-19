@@ -13,4 +13,4 @@ jobs:
           ls ${{ github.workspace }}
       - run: curl -L https://fly.io/install.sh | sh
       - name: Run deploy script
-        run: chmod +x /root/.fly/bin/flyctl deploy /content/Face-Detection-Fullstack-WebApp -t ${{ secrets.FLY_KEY }}
+        run: chmod +x /root/.fly/bin/flyctl deploy -t ${{ secrets.FLY_KEY }}
