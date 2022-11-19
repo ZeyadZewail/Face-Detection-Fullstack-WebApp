@@ -8,4 +8,5 @@ Front end using React (typescript) , backend using nodeJS (typescript) and the d
 
 
 
-[![image](https://user-images.githubusercontent.com/61602615/202872858-eba3a3fe-48b8-4995-b181-ea8533d1e648.png)](https://i.imgur.com/sCPx0Ll.mp4)
+https://user-images.githubusercontent.com/61602615/202873149-d8a5cb04-7982-4ed8-ab70-aea692018e4b.mp4
+
